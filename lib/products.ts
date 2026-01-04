@@ -1,22 +1,31 @@
-// lib/products.ts
 export type Product = {
   id: string;
   name: string;
-  price: number;        // i euro (för visning, Stripe styr egentligen priset)
-  stripePriceId: string; // kopplas mot Stripe Price ID
+  kind: "Hoodie" | "Tee" | "Cap";
+  price: number; // only for UI display
+  stripePriceId: string; // MUST be price_... from Stripe
 };
 
 export const products: Product[] = [
   {
-    id: "oversize-tee-black",
-    name: "Oversize Tee – Black",
-    price: 29,
-    stripePriceId: "price_123_oversize_black", // byts mot riktig från Stripe
+    id: "hoodie-ja-morant",
+    name: "Ja Morant Hoodie",
+    kind: "Hoodie",
+    price: 50,
+    stripePriceId: "price_1Sah4yL65pgma3thvJaxssT8",
   },
   {
-    id: "hoodie-white",
-    name: "Signature Hoodie – White",
-    price: 59,
-    stripePriceId: "price_123_hoodie_white",
+    id: "tee-midnight-black",
+    name: "Oversize Tee – Midnight Black",
+    kind: "Tee",
+    price: 29,
+    stripePriceId: "price_1Sah4yL65pgma3thvJaxssT8",
+  },
+  {
+    id: "cap-black",
+    name: "Court Side Cap – Black",
+    kind: "Cap",
+    price: 24,
+    stripePriceId: "price_1Sah4yL65pgma3thvJaxssT8",
   },
 ];

@@ -5,13 +5,6 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -23,4 +16,275 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+.ebk-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, #1f2937 0, transparent 55%),
+    radial-gradient(circle at bottom right, #020617 0, #020617 60%);
+  color: #e5e7eb;
+}
+
+.ebk-nav {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ebk-logo {
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.ebk-nav-links {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.ebk-nav-link {
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ebk-nav-link:hover {
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+}
+
+.ebk-nav-cart {
+  border: 1px solid rgba(148, 163, 184, 0.5);
+}
+
+.ebk-main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.ebk-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 800px) {
+  .ebk-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ebk-hero-text h1 {
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.ebk-hero-text p {
+  color: #9ca3af;
+  font-size: 0.95rem;
+  max-width: 480px;
+}
+
+.ebk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-bottom: 0.75rem;
+}
+
+.ebk-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.2rem;
+}
+
+.ebk-button-primary,
+.ebk-button-ghost {
+  font-size: 0.85rem;
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.ebk-button-primary {
+  background: #f97316;
+  color: #0b1120;
+}
+
+.ebk-button-primary:hover {
+  background: #fb923c;
+  transform: translateY(-1px);
+}
+
+.ebk-button-ghost {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  color: #e5e7eb;
+}
+
+.ebk-button-ghost:hover {
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.ebk-hero-card {
+  background: radial-gradient(circle at top, #111827, #020617);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 260px;
+}
+
+.ebk-hero-ghost-item {
+  border-radius: 1.2rem;
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  background: linear-gradient(145deg, #020617, #111827);
+  flex: 1;
+}
+
+.ebk-hero-ghost-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-top: 0.6rem;
+}
+
+.ebk-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #f97316;
+}
+
+.ebk-products-section {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ebk-products-header h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.ebk-products-header p {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.ebk-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.ebk-product-card {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 1.2rem;
+  border: 1px solid rgba(75, 85, 99, 0.8);
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ebk-product-image {
+  border-radius: 1rem;
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+.ebk-hoodie {
+  background: radial-gradient(circle at top, #0f172a, #111827);
+}
+
+.ebk-tee {
+  background: radial-gradient(circle at top, #020617, #111827);
+}
+
+.ebk-cap {
+  background: radial-gradient(circle at top, #111827, #020617);
+}
+
+.ebk-kind-pill {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.ebk-product-info h3 {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.ebk-product-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.3rem;
+}
+
+.ebk-price {
+  font-weight: 600;
+}
+
+.ebk-add-button {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background: #f97316;
+  color: #0b1120;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.ebk-add-button:hover:not(:disabled) {
+  background: #fb923c;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(248, 113, 113, 0.4);
+}
+
+.ebk-add-button:disabled {
+  opacity: 0.7;
+  cursor: default;
 }

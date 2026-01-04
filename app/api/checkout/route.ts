@@ -2,37 +2,64 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { products } from "@/lib/products";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { productId } = await req.json();
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
-    const product = products.find((p) => p.id === productId);
-    if (!product) {
-      return NextResponse.json({ error: "Invalid product" }, { status: 400 });
+    console.log("=== /api/checkout HIT ===");
+    console.log("CWD:", process.cwd());
+    console.log("Has STRIPE_SECRET_KEY:", Boolean(stripeSecretKey));
+    console.log("Has NEXT_PUBLIC_BASE_URL:", Boolean(process.env.NEXT_PUBLIC_BASE_URL));
+    console.log("Products count:", products?.length);
+
+    if (!stripeSecretKey) {
+      return NextResponse.json(
+        { error: "Missing STRIPE_SECRET_KEY (env not loaded)" },
+        { status: 500 }
+      );
     }
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: "2024-06-20" });
+
+    const body = await req.json().catch(() => null);
+    console.log("Request body:", body);
+
+    const productId = body?.productId;
+    if (typeof productId !== "string") {
+      return NextResponse.json({ error: "Invalid productId" }, { status: 400 });
+    }
+
+    const product = products.find((p) => p.id === productId);
+    console.log("Matched product:", product);
+
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    if (!product.stripePriceId?.startsWith("price_")) {
+      return NextResponse.json(
+        { error: `Invalid stripePriceId for ${product.id}: ${product.stripePriceId}` },
+        { status: 500 }
+      );
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      line_items: [
-        {
-          price: product.stripePriceId,
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: product.stripePriceId, quantity: 1 }],
       success_url: `${baseUrl}/success`,
       cancel_url: `${baseUrl}/cancel`,
+      metadata: { productId: product.id },
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error) {
-    console.error(error);
+  } catch (err: any) {
+    console.error("Checkout error (server):", err);
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { error: err?.message ?? "Unknown error" },
       { status: 500 }
     );
   }
