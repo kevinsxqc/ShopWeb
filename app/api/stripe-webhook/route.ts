@@ -25,9 +25,10 @@ export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
-  } catch (err: any) {
-    console.error("Webhook signature error:", err.message);
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("Webhook signature error:", message);
+    return new NextResponse(`Webhook Error: ${message}`, { status: 400 });
   }
 
   if (event.type === "checkout.session.completed") {

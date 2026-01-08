@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     console.log("Request body:", body);
 
-    const productId = body?.productId;
+    const { productId, size, color } = body ?? {};
     if (typeof productId !== "string") {
       return NextResponse.json({ error: "Invalid productId" }, { status: 400 });
     }
@@ -52,14 +52,18 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: product.stripePriceId, quantity: 1 }],
       success_url: `${baseUrl}/success`,
       cancel_url: `${baseUrl}/cancel`,
-      metadata: { productId: product.id },
+      metadata: {
+        productId: product.id,
+        size: typeof size === "string" ? size : "",
+        color: typeof color === "string" ? color : "",
+      },
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Checkout error (server):", err);
     return NextResponse.json(
-      { error: err?.message ?? "Unknown error" },
+      { error: err instanceof Error ? err.message : "Unknown error" },
       { status: 500 }
     );
   }
