@@ -1,7 +1,7 @@
 export default function CancelPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <h1 className="text-xl">Köp avbrutet. Du kan prova igen när du vill.</h1>
+    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+      <h1 style={{ fontSize: 24 }}>Payment cancelled.</h1>
     </main>
   );
 }

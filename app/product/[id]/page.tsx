@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState, useEffect } from "react";
 import { useParams, notFound } from "next/navigation";
 import { products } from "@/lib/products";
+import { useCart } from "@/app/components/cart/CartContext";
 
 export default function ProductPage() {
   const params = useParams<{ id: string }>();
@@ -15,29 +16,42 @@ export default function ProductPage() {
   );
 
   // Use lazy initializer to avoid accessing product when it's undefined
-  const [variantValue, setVariantValue] = useState(() => product?.variants[0]?.colorValue ?? "");
-  const [size, setSize] = useState(() => product?.sizes[0] ?? "M");
+  const [variantValue, setVariantValue] = useState(() => "");
+  const [size, setSize] = useState(() => "");
   const [imgIndex, setImgIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { addItem } = useCart();
 
   const variant = useMemo(
-    () => product?.variants.find((v) => v.colorValue === variantValue) ?? product?.variants[0],
+    () => product?.variants.find((v) => v.colorValue === variantValue) ?? undefined,
     [product?.variants, variantValue]
   );
+
+  useEffect(() => {
+    if (!product) return;
+    if (!variantValue && product.variants[0]) {
+      setVariantValue(product.variants[0].colorValue);
+    }
+    if (!size && product.sizes[0]) {
+      setSize(product.sizes[0]);
+    }
+  }, [product, size, variantValue]);
 
   // Reset gallery to first image whenever color changes
   useEffect(() => {
     setImgIndex(0);
   }, [variantValue]);
 
-  const images = variant?.images ?? [];
+  const images = variant?.images ?? product?.variants[0]?.images ?? [];
   const mainImage = images[Math.min(imgIndex, images.length - 1)];
+
+  const canBuy = Boolean(variantValue && size);
 
   if (!product) return notFound();
 
   async function buy() {
-    if (!product || !variant) return;
+    if (!product || !variantValue || !size) return;
 
     try {
       setError(null);
@@ -47,9 +61,14 @@ export default function ProductPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          productId: product.id,
-          color: variant.colorValue,
-          size,
+          items: [
+            {
+              productId: product.id,
+              color: variantValue,
+              size,
+              quantity: 1,
+            },
+          ],
         }),
       });
 
@@ -66,6 +85,15 @@ export default function ProductPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function addToCart() {
+    if (!product || !variantValue || !size) return;
+    addItem({
+      productId: product.id,
+      color: variantValue,
+      size,
+    });
   }
 
   function prev() {
@@ -87,9 +115,14 @@ export default function ProductPage() {
         <div className="mt-6 grid gap-8 lg:grid-cols-2">
           {/* Gallery */}
           <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/40">
+            <div className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/40">
               {mainImage ? (
-                <Image src={mainImage} alt={product.name} fill className="object-cover" />
+                <Image
+                  src={mainImage}
+                  alt={product.name}
+                  fill
+                  className="object-cover transition duration-500 group-hover:scale-[1.04]"
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-sm text-zinc-400">
                   No images found for this color
@@ -128,7 +161,12 @@ export default function ProductPage() {
                     }`}
                     aria-label={`Select image ${i + 1}`}
                   >
-                    <Image src={src} alt={`${product.name} ${i + 1}`} fill className="object-cover" />
+                    <Image
+                      src={src}
+                      alt={`${product.name} ${i + 1}`}
+                      fill
+                      className="object-cover transition duration-500 hover:scale-[1.03]"
+                    />
                   </button>
                 ))}
               </div>
@@ -137,7 +175,12 @@ export default function ProductPage() {
 
           {/* Options */}
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8">
-            <p className="text-xs tracking-widest text-zinc-400">DROP ITEM</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs tracking-widest text-zinc-400">DROP ITEM</p>
+              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] tracking-widest text-zinc-300">
+                LIMITED
+              </span>
+            </div>
             <h1 className="mt-2 text-3xl font-bold">{product.name}</h1>
             <p className="mt-2 text-zinc-300">{product.price} €</p>
 
@@ -185,16 +228,25 @@ export default function ProductPage() {
               </div>
             </div>
 
-            <button
-              onClick={buy}
-              disabled={loading}
-              className="mt-8 w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-zinc-950 hover:bg-zinc-200 disabled:opacity-60"
-            >
-              {loading ? "Redirecting..." : "Buy now"}
-            </button>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <button
+                onClick={addToCart}
+                disabled={!canBuy}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Add to cart
+              </button>
+              <button
+                onClick={buy}
+                disabled={loading || !canBuy}
+                className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-zinc-950 hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? "Redirecting..." : "Buy now"}
+              </button>
+            </div>
 
             <p className="mt-3 text-xs text-zinc-500">
-              Color & size are sent to Stripe as metadata (for PoD automation later).
+              Select color + size to continue. Details are sent to Stripe for PoD later.
             </p>
           </div>
         </div>

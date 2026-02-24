@@ -113,22 +113,35 @@ export default function HomePage() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((p) => (
             <Link href={`/product/${p.id}`} key={p.id} className="block">
-              <article className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition hover:border-white/20">
+              <article className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition hover:border-white/20 hover:shadow-xl hover:shadow-purple-500/10">
                 <div className="relative aspect-4/3 w-full overflow-hidden">
                   <Image
                     src={p.variants[0]?.images[0] ?? ""}
                     alt={p.name}
                     fill
-                    className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                    className="object-cover transition duration-500 group-hover:scale-[1.04]"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 via-zinc-950/10 to-transparent" />
+                  <div className="absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
+                    <div className="absolute -top-10 right-0 h-40 w-40 rounded-full bg-purple-500/20 blur-3xl" />
+                  </div>
 
                   <div className="absolute left-4 top-4">
-                    <KindBadge kind={p.kind} />
+                    <div className="flex items-center gap-2">
+                      <KindBadge kind={p.kind} />
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] tracking-widest text-zinc-200">
+                        LIMITED
+                      </span>
+                    </div>
                   </div>
 
                   <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                    <div className="text-sm font-semibold">{p.name}</div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-widest text-zinc-300">
+                        Drop item
+                      </div>
+                      <div className="text-sm font-semibold">{p.name}</div>
+                    </div>
                     <div className="rounded-full border border-white/10 bg-zinc-950/50 px-3 py-1 text-sm font-semibold">
                       {p.price} €
                     </div>
