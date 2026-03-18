@@ -1,14 +1,17 @@
 import { prisma } from "@/lib/prisma";
+import { prettyStatus } from "@/lib/orderStatus";
 import { products } from "@/lib/products";
 import Link from "next/link";
+import { StatusSelect } from "./StatusSelect";
 
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams?: { token?: string };
+  searchParams?: Promise<{ token?: string }>;
 }) {
+  const resolvedSearchParams = await searchParams;
   const adminToken = process.env.ADMIN_TOKEN;
-  if (!adminToken || searchParams?.token !== adminToken) {
+  if (!adminToken || resolvedSearchParams?.token !== adminToken) {
     return (
       <main className="min-h-screen bg-zinc-950 text-zinc-50">
         <div className="mx-auto max-w-2xl px-6 py-16">
@@ -71,9 +74,16 @@ export default async function AdminOrdersPage({
                     day: "2-digit",
                   })}
                 </span>
-                <span className="text-emerald-300">
-                  {order.status ?? order.paymentStatus ?? "paid"}
-                </span>
+                <div className="flex flex-col gap-2">
+                  <span className="text-emerald-300">
+                    {prettyStatus(order.status ?? order.paymentStatus)}
+                  </span>
+                  <StatusSelect
+                    orderId={order.id}
+                    currentStatus={order.status ?? order.paymentStatus}
+                    adminToken={adminToken}
+                  />
+                </div>
               </div>
             ))}
           </div>

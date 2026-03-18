@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { products } from "@/lib/products";
+import { prettyStatus, statusMessage } from "@/lib/orderStatus";
 
 type OrderInfo = {
   orderId: string | null;
@@ -82,8 +83,8 @@ export default function SuccessPage() {
         }).format(data.amountTotal / 100)
       : "-";
 
-  const rawStatus = (data?.status ?? data?.paymentStatus ?? "").toLowerCase();
-  const statusText = rawStatus === "paid" ? "Paid ✅" : rawStatus || "-";
+  const statusText = prettyStatus(data?.status ?? data?.paymentStatus);
+  const statusNote = statusMessage(data?.status ?? data?.paymentStatus);
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-50">
@@ -129,6 +130,11 @@ export default function SuccessPage() {
                 <span className="text-zinc-400">Status</span>
                 <span className="text-right">{statusText}</span>
               </div>
+              {statusNote ? (
+                <div className="mt-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-200">
+                  {statusNote}
+                </div>
+              ) : null}
               <div className="flex justify-between gap-4">
                 <span className="text-zinc-400">Order ID</span>
                 <span className="text-right font-mono text-xs">

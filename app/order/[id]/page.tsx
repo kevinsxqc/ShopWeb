@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { prettyStatus, statusMessage } from "@/lib/orderStatus";
 
 type OrderResponse = {
   id: string;
@@ -140,21 +141,4 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
       </div>
     </main>
   );
-}
-
-function prettyStatus(s: string) {
-  const v = (s ?? "").toUpperCase();
-  if (v === "PAID") return "Paid ✅";
-  if (v === "PROCESSING") return "Processing 🛠️";
-  if (v === "SHIPPED") return "Shipped 🚚";
-  if (v === "CANCELLED") return "Cancelled";
-  return s;
-}
-
-function statusMessage(s: string) {
-  const v = (s ?? "").toUpperCase();
-  if (v === "PAID") return "Payment received. Your order will be processed soon.";
-  if (v === "PROCESSING") return "Your order is being prepared for production/shipping.";
-  if (v === "SHIPPED") return "Your order has been shipped.";
-  return "Order status updated by the shop.";
 }

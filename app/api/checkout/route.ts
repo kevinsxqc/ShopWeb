@@ -95,11 +95,13 @@ export async function POST(req: NextRequest) {
     const draft = await prisma.orderDraft.create({
       data: {
         items: JSON.stringify(cartItems),
-        status: "PENDING",
+        status: "PENDING_PAYMENT",
       },
     });
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
+    const primaryItem = cartItems[0];
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -112,6 +114,9 @@ export async function POST(req: NextRequest) {
       billing_address_collection: "required",
       metadata: {
         draftId: draft.id,
+        productId: primaryItem?.productId,
+        color: primaryItem?.color,
+        size: primaryItem?.size,
       },
     });
 

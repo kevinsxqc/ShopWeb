@@ -150,10 +150,10 @@ export const products: Product[] = [
         colorLabel: "Military Green",
         colorValue: "military-green",
         images: [
-          "/products/SGAhoode/SGA-militarygreen-front.png",
-          "/products/SGAhoode/SGA-militarygreen-front+.png",
-          "/products/SGAhoode/SGA-militarygreen-back.png",
-          "/products/SGAhoode/SGA-militarygreen-side.png",
+          "/products/SGAhoode/SGA-military-green-front.png",
+          "/products/SGAhoode/SGA-military-green-front+.png",
+          "/products/SGAhoode/SGA-military-green-back.png",
+          "/products/SGAhoode/SGA-military-green-side.png",
         ],
       },
       {

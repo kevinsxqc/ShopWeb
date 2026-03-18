@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // Validate + compute totals server-side
+    // Validate products (avoid injecting invalid items)
     for (const it of items) {
       const p = products.find((x) => x.id === it.productId);
       if (!p) {
@@ -116,13 +116,15 @@ export async function POST(req: NextRequest) {
     const { address, name } = resolveAddress(sessionWithShipping);
     const customerEmail = session.customer_details?.email ?? null;
 
-    // ✅ Create order record
+    // ✅ Create or update order record; this avoids duplicates from replayed webhooks.
     try {
-      await prisma.order.create({
-        data: {
+      await prisma.order.upsert({
+        where: { stripeSessionId: session.id },
+        create: {
           stripeSessionId: session.id,
+          checkoutSessionId: session.id,
           paymentIntentId,
-          status: session.payment_status ?? null,
+          status: "PAID",
           paymentStatus: session.payment_status ?? null,
           amountTotal: session.amount_total ?? null,
           currency: session.currency ?? null,
@@ -140,13 +142,15 @@ export async function POST(req: NextRequest) {
           shippingCountry: address?.country ?? null,
           itemsJson: JSON.stringify(items),
         },
+        update: {
+          checkoutSessionId: session.id,
+          paymentIntentId,
+          status: "PAID",
+          paymentStatus: session.payment_status ?? null,
+          amountTotal: session.amount_total ?? null,
+          currency: session.currency ?? null,
+        },
       });
-
-      await prisma.$executeRaw`
-        UPDATE "Order"
-        SET "checkoutSessionId" = ${session.id}
-        WHERE "stripeSessionId" = ${session.id}
-      `;
 
       // Mark draft as paid
       await prisma.orderDraft.update({
