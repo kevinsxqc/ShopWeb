@@ -6,6 +6,13 @@ import { useSearchParams } from "next/navigation";
 import { products } from "@/lib/products";
 import { prettyStatus, statusMessage } from "@/lib/orderStatus";
 
+type OrderLineItem = {
+  productId: string | null;
+  color: string | null;
+  size: string | null;
+  quantity: number;
+};
+
 type OrderInfo = {
   orderId: string | null;
   sessionId: string;
@@ -17,6 +24,7 @@ type OrderInfo = {
   productId: string | null;
   color: string | null;
   size: string | null;
+  items: OrderLineItem[];
   customerEmail: string | null;
   shippingAddress: {
     name: string | null;
@@ -29,6 +37,13 @@ type OrderInfo = {
   } | null;
   error?: string;
 };
+
+function formatCurrency(amount: number, currency: string | null) {
+  return new Intl.NumberFormat("sv-SE", {
+    style: "currency",
+    currency: (currency ?? "EUR").toUpperCase(),
+  }).format(amount);
+}
 
 export default function SuccessPage() {
   const searchParams = useSearchParams();
@@ -51,6 +66,7 @@ export default function SuccessPage() {
           productId: null,
           color: null,
           size: null,
+          items: [],
           customerEmail: null,
           shippingAddress: null,
         });
@@ -70,17 +86,11 @@ export default function SuccessPage() {
     run();
   }, [sessionId]);
 
-  const product = data?.productId
-    ? products.find((p) => p.id === data.productId)
-    : undefined;
-
-  const priceText = product
-    ? `${product.price} €`
-    : typeof data?.amountTotal === "number"
-      ? new Intl.NumberFormat("sv-SE", {
-          style: "currency",
-          currency: (data.currency ?? "EUR").toUpperCase(),
-        }).format(data.amountTotal / 100)
+  const orderItems = data?.items ?? [];
+  const totalQuantity = orderItems.reduce((sum, item) => sum + (item.quantity ?? 1), 0);
+  const totalPriceText =
+    typeof data?.amountTotal === "number"
+      ? formatCurrency(data.amountTotal / 100, data.currency)
       : "-";
 
   const statusText = prettyStatus(data?.status ?? data?.paymentStatus);
@@ -93,9 +103,7 @@ export default function SuccessPage() {
           <p className="text-xs tracking-widest text-zinc-400">RECEIPT</p>
           <h1 className="mt-2 text-3xl font-bold">Thanks for your order</h1>
 
-          {loading && (
-            <p className="mt-6 text-zinc-300">Loading order details…</p>
-          )}
+          {loading && <p className="mt-6 text-zinc-300">Loading order details...</p>}
 
           {!loading && !sessionId && (
             <div className="mt-6 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-100">
@@ -112,17 +120,58 @@ export default function SuccessPage() {
           {!loading && data && !data.error && (
             <div className="mt-6 space-y-4 text-sm text-zinc-200">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
                   <div>
-                    <div className="text-xs uppercase tracking-widest text-zinc-400">Order summary</div>
+                    <div className="text-xs uppercase tracking-widest text-zinc-400">
+                      Order summary
+                    </div>
                     <div className="mt-2 text-base font-semibold">
-                      {product?.name ?? data.productId ?? "-"}
+                      {totalQuantity > 0 ? `${totalQuantity} item${totalQuantity === 1 ? "" : "s"}` : "Items"}
                     </div>
                     <div className="mt-1 text-xs text-zinc-400">
-                      Color: {data.color ?? "-"} • Size: {data.size ?? "-"}
+                      {orderItems.length > 1
+                        ? `${orderItems.length} products in this order`
+                        : "Product details"}
                     </div>
                   </div>
-                  <div className="text-right text-sm font-semibold">{priceText}</div>
+                  <div className="text-right text-sm font-semibold">{totalPriceText}</div>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {orderItems.length > 0 ? (
+                    orderItems.map((item, index) => {
+                      const product = item.productId
+                        ? products.find((p) => p.id === item.productId)
+                        : undefined;
+                      const lineTotal =
+                        product != null
+                          ? formatCurrency(product.price * item.quantity, data.currency)
+                          : `${item.quantity} pcs`;
+
+                      return (
+                        <div
+                          key={`${item.productId ?? "item"}-${item.color ?? "no-color"}-${item.size ?? "no-size"}-${index}`}
+                          className="flex items-start justify-between gap-4"
+                        >
+                          <div>
+                            <div className="font-semibold">
+                              {product?.name ?? item.productId ?? "Product"}
+                            </div>
+                            <div className="mt-1 text-xs text-zinc-400">
+                              Color: {item.color ?? "-"} • Size: {item.size ?? "-"} • Qty: {item.quantity}
+                            </div>
+                          </div>
+                          <div className="text-right text-sm font-medium text-zinc-300">
+                            {lineTotal}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-xs text-zinc-400">
+                      Product details are being prepared. Refresh the page in a moment.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -150,7 +199,7 @@ export default function SuccessPage() {
 
           {!loading && data && !data.error && (
             <p className="mt-6 text-sm text-zinc-300">
-              You’ll receive a confirmation email{data.customerEmail ? ` at ${data.customerEmail}` : ""}.
+              You&apos;ll receive a confirmation email{data.customerEmail ? ` at ${data.customerEmail}` : ""}.
             </p>
           )}
 

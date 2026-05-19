@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       return new NextResponse("Invalid signature", { status: 400 });
     }
 
-    // ✅ Always ACK quickly for events we don't care about
+    //  Always ACK quickly for events we don't care about
     if (event.type !== "checkout.session.completed") {
       return NextResponse.json({ received: true });
     }
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
     const { address, name } = resolveAddress(sessionWithShipping);
     const customerEmail = session.customer_details?.email ?? null;
 
-    // ✅ Create or update order record; this avoids duplicates from replayed webhooks.
+    //  Create or update order record; this avoids duplicates from replayed webhooks.
     try {
       await prisma.order.upsert({
         where: { stripeSessionId: session.id },

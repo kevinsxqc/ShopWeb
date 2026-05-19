@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id?: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const adminToken = process.env.ADMIN_TOKEN;
   const token = req.nextUrl.searchParams.get("token");
@@ -20,7 +20,8 @@ export async function POST(
   const bodyOrderId = body?.orderId;
   const queryOrderId = req.nextUrl.searchParams.get("id");
 
-  const orderId = params?.id || bodyOrderId || queryOrderId;
+  const { id } = await params;
+  const orderId = id || bodyOrderId || queryOrderId;
 
   if (!orderId) {
     console.warn("Missing order id for status update", { params, body, query: req.nextUrl.searchParams.toString() });

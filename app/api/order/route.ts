@@ -52,21 +52,30 @@ type OrderByCheckoutRow = {
 };
 
 type OrderItem = {
-  productId?: string;
-  color?: string;
-  size?: string;
+  productId: string | null;
+  color: string | null;
+  size: string | null;
+  quantity: number;
 };
 
-function firstItemFromJson(value: string | null): OrderItem | null {
-  if (!value) return null;
+function itemsFromJson(value: string | null): OrderItem[] {
+  if (!value) return [];
   try {
     const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed) || parsed.length === 0) return null;
-    const first = parsed[0];
-    if (!first || typeof first !== "object") return null;
-    return first as OrderItem;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+      .map((item) => ({
+        productId: typeof item.productId === "string" ? item.productId : null,
+        color: typeof item.color === "string" ? item.color : null,
+        size: typeof item.size === "string" ? item.size : null,
+        quantity:
+          typeof item.quantity === "number" && Number.isFinite(item.quantity)
+            ? Math.max(1, item.quantity)
+            : 1,
+      }));
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -108,7 +117,8 @@ export async function GET(req: NextRequest) {
     const checkoutOrder = orderByCheckout[0] ?? null;
 
     if (checkoutOrder) {
-      const firstItem = firstItemFromJson(checkoutOrder.itemsJson);
+      const items = itemsFromJson(checkoutOrder.itemsJson);
+      const firstItem = items[0] ?? null;
       return NextResponse.json({
         orderId: checkoutOrder.id,
         sessionId: checkoutOrder.checkoutSessionId ?? checkoutOrder.stripeSessionId,
@@ -120,6 +130,7 @@ export async function GET(req: NextRequest) {
         productId: checkoutOrder.productId ?? firstItem?.productId ?? null,
         color: checkoutOrder.color ?? firstItem?.color ?? null,
         size: checkoutOrder.size ?? firstItem?.size ?? null,
+        items,
         customerEmail: checkoutOrder.customerEmail,
         shippingAddress: {
           name: checkoutOrder.shippingName,
@@ -138,7 +149,8 @@ export async function GET(req: NextRequest) {
     });
 
     if (dbOrder) {
-      const firstItem = firstItemFromJson(dbOrder.itemsJson);
+      const items = itemsFromJson(dbOrder.itemsJson);
+      const firstItem = items[0] ?? null;
       return NextResponse.json({
         orderId: dbOrder.id,
         sessionId: dbOrder.stripeSessionId,
@@ -150,6 +162,7 @@ export async function GET(req: NextRequest) {
         productId: dbOrder.productId ?? firstItem?.productId ?? null,
         color: dbOrder.color ?? firstItem?.color ?? null,
         size: dbOrder.size ?? firstItem?.size ?? null,
+        items,
         customerEmail: dbOrder.customerEmail,
         shippingAddress: {
           name: dbOrder.shippingName,
@@ -169,6 +182,30 @@ export async function GET(req: NextRequest) {
     const { address, name } = resolveAddress(session);
 
     const meta = session.metadata ?? {};
+    const draftId = meta.draftId;
+    let fallbackItems: OrderItem[] = [];
+
+    if (typeof draftId === "string" && draftId.length > 0) {
+      const draft = await prisma.orderDraft.findUnique({
+        where: { id: draftId },
+      });
+      fallbackItems = itemsFromJson(draft?.items ?? null);
+    }
+
+    if (fallbackItems.length === 0) {
+      fallbackItems = meta.productId
+        ? [
+            {
+              productId: meta.productId ?? null,
+              color: meta.color ?? null,
+              size: meta.size ?? null,
+              quantity: 1,
+            },
+          ]
+        : [];
+    }
+
+    const fallbackItem = fallbackItems[0] ?? null;
 
     return NextResponse.json({
       orderId: null,
@@ -179,9 +216,10 @@ export async function GET(req: NextRequest) {
       paymentStatus: session.payment_status,
       amountTotal: session.amount_total,
       currency: session.currency,
-      productId: meta.productId ?? null,
-      color: meta.color ?? null,
-      size: meta.size ?? null,
+      productId: fallbackItem?.productId ?? null,
+      color: fallbackItem?.color ?? null,
+      size: fallbackItem?.size ?? null,
+      items: fallbackItems,
       customerEmail: session.customer_details?.email ?? null,
       shippingAddress: address
         ? {
